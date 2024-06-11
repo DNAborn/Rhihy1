@@ -88,6 +88,10 @@ library(RColorBrewer)
 library(VennDiagram)
 library(GenomicFeatures)
 library(phylotools)
+library(ape)
+
+library(writexl)
+
 
 
 ```
@@ -209,7 +213,7 @@ head(transcripts, n=10)
 #### -add line breaks
 install fastx-toolkit
 
-```{bash fastx}
+```{bash fastx, eval=FALSE}
 # fasta_formatter -h
 #	usage: fasta_formatter [-h] [-i INFILE] [-o OUTFILE] [-w N] [-t] [-e]
 
@@ -301,8 +305,7 @@ for (i in list.dirs(path = quantfolder, full.names = TRUE, recursive = FALSE)) {
 files <- c(files,paste(i,"/quant.sf",sep=""))
 # print(head(read.table(files[length(files)], header=T)))
 }
-readLines(files[length(files)])
-
+readLines(files[length(files)]) %>% head()
 
 coldata <- data.frame(files=files,
                       run=list.files(quantfolder) %>% str_remove(.,"_quant"))
@@ -325,18 +328,40 @@ coldata$condition <- coldata$life_stage %>%
 
 ```
 
+
 ## -Tximeta
-
-
-Summarize all transcript counts to gene level
+Summarize all transcript counts to gene level (no gene infos yet... transcripts = genes )
 ```{r tximeta}
 # Make manual linked transcriptome
 
 # set paths
 file.exists(indexDir, fastaPath, gtfPath)
 
-gtfdata <- readLines(gtfPath)
+quant <- read.delim(files[1])
+gtfdata <- read.gff(gtfPath, na.strings = c(".", "?"), GFF3 = TRUE)
+
+head(quant, n=10)
 head(gtfdata, n=10)
+
+tx_names <- quant$Name
+tx_names %>% length()
+tx_names %>% unique() %>% length()
+
+
+str_count(quant,pattern="gm1.1_g") %>% table()
+str_count(gtfdata,pattern="gm1.1_g") %>% table()
+
+str_count(quant,pattern="CE99926_618") %>% table()
+str_count(gtfdata,pattern="CE99926_618") %>% table()
+
+# # clear bfc
+# bfcloc <- getTximetaBFC()
+# bfc <- BiocFileCache(bfcloc)
+# bfcquery(bfc, "")
+# bfcquery(bfc, "Rhihy1")
+# 
+# bfcremove(bfc, bfcquery(bfc, "Rhihy1")$rid)
+# bfcremove(bfc, bfcquery(bfc, "linkedTxomeTbl")$rid)
 
 makeLinkedTxome(indexDir=indexDir,
                  source="MycoCosm",
@@ -348,14 +373,30 @@ makeLinkedTxome(indexDir=indexDir,
                  write=FALSE)
 
 # use tximeta on coldata and save as summarized experiment se
-se <- tximeta(coldata)
 
-se
+
+
+
+
+
+# Use tx2gene
+
+tx2gene <- data.frame(TXNAME=tx_names,
+                      GENEID=tx_names)
+files <- coldata[,"files"]
+names(files) <- coldata[,"names"]
+
+txi <- tximport(files=files, type = "salmon", tx2gene = tx2gene)
+head(txi$counts)
+
+sampleTable <- coldata
+rownames(sampleTable) <- colnames(txi$counts)
+dds <- DESeqDataSetFromTximport(txi, sampleTable, ~condition)
 
 ```
 
 ### -Check mapping rates
-```{r se_QC, fig.show='hold', out.width="50%"}
+```{r se_QC, fig.show='hold', out.width="50%", eval=FALSE}
 # Plot data:
 # The scale of the y axis can be changed by setting ylim = c(y1,y2) values 
 
@@ -363,26 +404,52 @@ barplot(metadata(se)[["quantInfo"]]$percent_mapped, main="Mapping Rate, all samp
 barplot(metadata(se)[["quantInfo"]]$num_processed/1000000, main="Mio. Reads, all samples", names = colnames(se), las = 2, cex.names = 0.5, ylim = c(0,30))
 ```
 
-Here we go through some raw data from the SummarizedExperimen and summarize it to gene level. 
-```{r assessing_se, eval=FALSE}
-# Extract tximeta file infos (se)
+## -DESeq2
+```{r Deseq2}
+dds <- DESeq(dds) 
 
-colData(se)
-mcols(se)
+# Plot example counts
+plotCounts(dds,gene = "CE559232_26255", intgroup = "condition")
 
-# colData(se) # samples, conditions,...
-assayNames(se) # counts
-rowRanges(se) # see metadata: Gene_IDs, biotype,..
-seqinfo(se)
-
-str(metadata(se)[["quantInfo"]]) # Infos from Salmon Mapping
+# Make results
+resultsNames(dds)
+res_germling_vs_zoospore <- results(dds, contrast = c("condition","germling","zoospore"))
+res_immat_thallus_vs_germling <- results(dds, contrast = c("condition","immat_thallus","germling"))
+res_mat_thallus_vs_immat_thallus <- results(dds, contrast = c("condition","mat_thallus","immat_thallus"))
+res_zoospore_vs_mat_thallus <- results(dds, contrast = c("condition","zoospore","mat_thallus"))
 
 
 ```
 
-Summarizes abundances, counts, lengths, (and inferential replicates or variance) from transcript- to gene-level.
+# Export data
+```{r export, eval=FALSE}
 
-```{r, eval = FALSE}
-# summarize to gene level
-gse <- summarizeToGene(se)
+res_exp <- data.frame(
+  # general
+  "name" = rownames(dds),
+ # results res_germling_vs_zoospore
+ "L2FC.germling_vs_zoospore" = res_germling_vs_zoospore$log2FoldChange,
+ "pvalue.germling_vs_zoospore" = res_germling_vs_zoospore$pvalue,
+ "padj.germling_vs_zoospore" = res_germling_vs_zoospore$padj,
+  # results res_immat_thallus_vs_germling
+ "L2FC.res_immat_thallus_vs_germling" = res_immat_thallus_vs_germling$log2FoldChange,
+ "pvalue.res_immat_thallus_vs_germling" = res_immat_thallus_vs_germling$pvalue,
+ "padj.res_immat_thallus_vs_germling" = res_immat_thallus_vs_germling$padj,
+  # results res_mat_thallus_vs_immat_thallus
+ "L2FC.res_mat_thallus_vs_immat_thallus" = res_mat_thallus_vs_immat_thallus$log2FoldChange,
+ "pvalue.res_mat_thallus_vs_immat_thallus" = res_mat_thallus_vs_immat_thallus$pvalue,
+ "padj.res_mat_thallus_vs_immat_thallus" = res_mat_thallus_vs_immat_thallus$padj,
+  # results res_zoospore_vs_mat_thallus
+ "L2FC.res_zoospore_vs_mat_thallus" = res_zoospore_vs_mat_thallus$log2FoldChange,
+ "pvalue.res_zoospore_vs_mat_thallus" = res_zoospore_vs_mat_thallus$pvalue,
+ "padj.res_zoospore_vs_mat_thallus" = res_zoospore_vs_mat_thallus$padj,
+  counts(dds, normalized=TRUE)[,c("ZSP_1","ZSP_2","ZSP_3", "GER_1", "GER_2", "GER_3","IMA_1", "IMA_2", "IMA_3","MAT_1", "MAT_2", "MAT_3")]
+ )
+res_exp
+
+write_xlsx(data.frame(res_exp),
+           paste(gitdir,"2024_06 Rhihy1 rna-seq.xlsx",sep="/"))
+
+
 ```
+
