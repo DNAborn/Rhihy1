@@ -498,6 +498,34 @@ res_mat_thallus_vs_immat_thallus <- results(dds, contrast = c("condition","mat_t
 res_zoospore_vs_mat_thallus <- results(dds, contrast = c("condition","zoospore","mat_thallus"))
 ```
 
+### QC
+
+``` r
+plotMA(dds)
+```
+
+![](Readme_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+
+``` r
+plotDispEsts(dds)
+```
+
+![](Readme_files/figure-gfm/unnamed-chunk-1-2.png)<!-- -->
+
+``` r
+boxplot(log10(assays(dds)[["cooks"]]), range=0, las=2)
+```
+
+![](Readme_files/figure-gfm/unnamed-chunk-1-3.png)<!-- -->
+
+``` r
+# PCA
+vsd <- vst(dds, blind=FALSE)
+plotPCA(vsd, intgroup=c("condition"), ntop=2000)
+```
+
+![](Readme_files/figure-gfm/unnamed-chunk-1-4.png)<!-- -->
+
 # Export data
 
 ``` r

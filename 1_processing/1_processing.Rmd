@@ -421,6 +421,21 @@ res_zoospore_vs_mat_thallus <- results(dds, contrast = c("condition","zoospore",
 
 ```
 
+
+### QC
+```{r}
+plotMA(dds)
+plotDispEsts(dds)
+boxplot(log10(assays(dds)[["cooks"]]), range=0, las=2)
+
+# PCA
+vsd <- vst(dds, blind=FALSE)
+plotPCA(vsd, intgroup=c("condition"), ntop=2000)
+
+```
+
+
+
 # Export data
 ```{r export, eval=FALSE}
 
