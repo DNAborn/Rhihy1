@@ -24,7 +24,8 @@ Reference: Soneson C, Love MI, Robinson MD (2015). “Differential analyses for 
 
 Differential Expression Analysis:
 DESeq2
-Reference: 
+Reference: Love MI, Huber W, Anders S (2014). “Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2.” Genome Biology, 15, 550. doi:10.1186/s13059-014-0550-8
+
 
 Data Acquisition and Processing
 
