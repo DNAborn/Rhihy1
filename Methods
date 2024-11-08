@@ -1,0 +1,36 @@
+
+Raw RNA-Seq data:
+https://trace.ncbi.nlm.nih.gov/Traces/study/?acc=SRP350860
+
+Reference:
+Davis Laundon Nathan Chrismas Kimberley Bird Seth Thomas Thomas Mock Michael Cunliffe (2022) A cellular and molecular atlas reveals the basis of chytrid development
+eLife 11:e73933. https://doi.org/10.7554/eLife.73933
+
+Genomic data:
+Rhizoclosmatium globosum JEL800
+https://mycocosm.jgi.doe.gov/Rhihy1/Rhihy1.home.html
+-> https://genome.jgi.doe.gov/portal/pages/dynamicOrganismDownload.jsf?organism=Rhihy1
+
+Reference:
+Mondo SJ, Dannebaum RO, Kuo RC, Louie KB, Bewick AJ, LaButti K, Haridas S, Kuo A, Salamov A, Ahrendt SR, Lau R, Bowen BP, Lipzen A, Sullivan W, Andreopoulos BB, Clum A, Lindquist E, Daum C, Northen TR, Kunde-Ramamoorthy G, Schmitz RJ, Gryganskyi A, Culley D, Magnuson J, James TY, O'Malley MA, Stajich JE, Spatafora JW, Visel A, Grigoriev IV. Widespread adenine N6-methylation of active genes in fungi. Nat Genet. 2017 Jun;49(6):964-968. doi: 10.1038/ng.3859. Epub 2017 May 8. PMID: 28481340.
+
+Mapping:
+Salmon v 1.10.3
+Reference: Patro R, Duggal G, Love MI, Irizarry RA, Kingsford C. Salmon provides fast and bias-aware quantification of transcript expression. Nat Methods. 2017 Apr;14(4):417-419. doi: 10.1038/nmeth.4197. Epub 2017 Mar 6. PMID: 28263959; PMCID: PMC5600148.
+
+Import:
+tximport
+Reference: Soneson C, Love MI, Robinson MD (2015). “Differential analyses for RNA-seq: transcript-level estimates improve gene-level inferences.” F1000Research, 4. doi:10.12688/f1000research.7563.1. 
+
+Differential Expression Analysis:
+DESeq2
+Reference: 
+
+Data Acquisition and Processing
+
+Raw sequencing data were obtained from the NCBI Sequence Read Archive (SRA) under accession number SRP350860.  Reads were mapped to the Rhizoctonia hymenis  genome and EST sequences, downloaded from MycoCosm (https://mycocosm.jgi.doe.gov/Rhihy1/Rhihy1.home.html), using Salmon (v1.10.3). A decoy-aware index was constructed using both the reference transcriptome and genome. Salmon quantification was performed with the --validateMappings and --gcBias options.
+
+Differential Gene Expression Analysis
+
+Transcript-level quantifications were imported for differential expression analysis using tximport (v1.32.0).  Differential gene expression analysis was conducted with DESeq2 (v1.44.0) in R. Normalized count data were subsequently exported and visualized.
+

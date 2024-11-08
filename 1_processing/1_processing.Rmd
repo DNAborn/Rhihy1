@@ -167,6 +167,8 @@ for fn in $srr; do fastq-dump --gzip --outdir . --split-files $fn; done
 Download genomic datra from: https://mycocosm.jgi.doe.gov/Rhihy1/Rhihy1.home.html
 -> https://genome.jgi.doe.gov/portal/pages/dynamicOrganismDownload.jsf?organism=Rhihy1
 
+Reference: Nat Genet. 2017 Jun;49(6):964-968. doi: 10.1038/ng.3859 
+
 Rhihy1_AssemblyScaffolds_Repeatmasked.fasta.gz
 Rhihy1_EST_20151219_cluster_consensi.fasta.gz
 Rhihy1_FilteredModels1_deflines.gff3.gz
@@ -465,6 +467,11 @@ res_exp
 write_xlsx(data.frame(res_exp),
            paste(gitdir,"2024_06 Rhihy1 rna-seq.xlsx",sep="/"))
 
+
+```
+
+```{r r_info}
+sessionInfo()
 
 ```
 
